@@ -1,0 +1,579 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <title>Cấu hình WiFi + Quét IP loa R1</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+
+    <!-- jQuery giống bản gốc -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"></script>
+
+    <style>
+        :root {
+            --primary: #2563eb;
+            --primary-soft: #dbeafe;
+            --danger: #ef4444;
+            --bg: #0f172a;
+            --card-bg: rgba(15, 23, 42, 0.9);
+            --text-main: #e5e7eb;
+            --text-sub: #9ca3af;
+            --border-soft: rgba(148, 163, 184, 0.4);
+            --radius-xl: 18px;
+            --shadow-soft: 0 18px 45px rgba(15, 23, 42, 0.55);
+        }
+
+        * { box-sizing: border-box; }
+
+        body {
+            margin: 0;
+            min-height: 100vh;
+            font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+            background:
+                radial-gradient(circle at top left, #38bdf8 0, transparent 55%),
+                radial-gradient(circle at bottom right, #22c55e 0, transparent 55%),
+                linear-gradient(135deg, #020617, #0f172a);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-main);
+            padding: 16px;
+        }
+
+        .glass-card {
+            width: 100%;
+            max-width: 520px;
+            background: var(--card-bg);
+            border-radius: var(--radius-xl);
+            border: 1px solid rgba(148, 163, 184, 0.25);
+            box-shadow: var(--shadow-soft);
+            backdrop-filter: blur(22px);
+            padding: 22px 22px 18px;
+            position: relative;
+            overflow: hidden;
+        }
+        .glass-card::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.25), transparent 55%);
+            opacity: 0.7;
+            pointer-events: none;
+        }
+        .card-inner { position: relative; z-index: 1; }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 10px;
+        }
+        .icon-circle {
+            width: 42px;
+            height: 42px;
+            border-radius: 999px;
+            background: radial-gradient(circle at 30% 30%, #60a5fa, #1d4ed8);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.5);
+        }
+        .card-title {
+            font-size: 18px;
+            font-weight: 650;
+            margin: 0;
+        }
+        .card-subtitle {
+            margin: 2px 0 0;
+            font-size: 13px;
+            color: var(--text-sub);
+        }
+
+        .steps-box {
+            margin-top: 12px;
+            padding: 10px 12px;
+            border-radius: 14px;
+            border: 1px dashed var(--border-soft);
+            background: radial-gradient(circle at top left, rgba(37, 99, 235, 0.16), transparent 55%),
+                        rgba(15, 23, 42, 0.9);
+            font-size: 12px;
+            max-height: 170px;
+            overflow-y: auto;
+        }
+        .steps-title {
+            font-weight: 600;
+            margin-bottom: 6px;
+            color: #bfdbfe;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 12px;
+        }
+        .steps-title span.icon {
+            width: 16px;
+            height: 16px;
+            border-radius: 999px;
+            background: rgba(59, 130, 246, 0.4);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 11px;
+        }
+        .steps-list {
+            margin: 0;
+            padding-left: 18px;
+            color: var(--text-sub);
+        }
+        .steps-list li { margin-bottom: 4px; }
+        .steps-note {
+            margin-top: 6px;
+            color: #f97316;
+            font-size: 11px;
+        }
+
+        .section-title {
+            margin: 14px 0 6px;
+            font-size: 13px;
+            font-weight: 600;
+            color: #bfdbfe;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .section-title small {
+            font-size: 11px;
+            color: var(--text-sub);
+        }
+
+        .field { margin-bottom: 10px; text-align: left; }
+        .field-label {
+            font-size: 12px;
+            margin-bottom: 4px;
+            color: var(--text-sub);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .field-label span.right-hint {
+            font-size: 11px;
+            opacity: 0.8;
+        }
+
+        .input, select {
+            width: 100%;
+            padding: 9px 11px;
+            border-radius: 10px;
+            border: 1px solid var(--border-soft);
+            background: rgba(15, 23, 42, 0.9);
+            color: var(--text-main);
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.18s ease, box-shadow 0.18s ease, background 0.18s ease;
+        }
+        .input::placeholder { color: rgba(148, 163, 184, 0.7); }
+        .input:focus, select:focus {
+            border-color: #60a5fa;
+            box-shadow: 0 0 0 1px rgba(37, 99, 235, 0.7);
+            background: rgba(15, 23, 42, 1);
+        }
+
+        .btn-row {
+            display: flex;
+            gap: 8px;
+            margin-top: 14px;
+        }
+        .btn {
+            flex: 1;
+            padding: 9px 12px;
+            border-radius: 999px;
+            border: 0;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.12s ease, box-shadow 0.12s ease, background 0.12s ease, opacity 0.12s ease;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 6px;
+        }
+        .btn-icon { font-size: 16px; }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #3b82f6, #2563eb);
+            color: #e5e7eb;
+            box-shadow: 0 10px 25px rgba(37, 99, 235, 0.6);
+        }
+        .btn-primary:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 14px 30px rgba(37, 99, 235, 0.8);
+        }
+        .btn-secondary {
+            background: rgba(15, 23, 42, 0.95);
+            color: var(--text-sub);
+            border: 1px solid rgba(148, 163, 184, 0.6);
+        }
+        .btn-secondary:hover {
+            background: rgba(15, 23, 42, 1);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: default;
+            transform: none;
+            box-shadow: none;
+        }
+
+        .message {
+            margin-top: 10px;
+            font-size: 12px;
+            text-align: left;
+            min-height: 16px;
+        }
+        .message-success { color: #4ade80; }
+        .message-error   { color: #fb7185; }
+        .message-info    { color: #93c5fd; }
+
+        .scan-note {
+            font-size: 11px;
+            color: var(--text-sub);
+            margin-top: 4px;
+        }
+        .scan-result {
+            margin-top: 6px;
+            font-size: 12px;
+        }
+        .scan-result strong {
+            color: #facc15;
+        }
+
+        @media (max-width: 520px) {
+            .glass-card { padding: 18px 16px 14px; }
+        }
+    </style>
+</head>
+<body>
+
+<div class="glass-card">
+    <div class="card-inner">
+        <div class="card-header">
+            <div class="icon-circle">R1</div>
+            <div>
+                <h1 class="card-title">Cấu hình WiFi & quét IP loa R1</h1>
+                <p class="card-subtitle">
+                    Gửi WiFi cho loa R1 và hỗ trợ dò IP loa trong mạng LAN (không quét port).
+                </p>
+            </div>
+        </div>
+
+        <!-- HƯỚNG DẪN -->
+        <div class="steps-box">
+            <div class="steps-title">
+                <span class="icon">?</span>
+                Hướng dẫn cấu hình WiFi cho R1
+            </div>
+            <ol class="steps-list">
+                <li>Nhấn và giữ nút trên đỉnh loa R1 khoảng 5 giây cho đến khi loa báo
+                    <strong>"Bắt đầu cấu hình mạng"</strong> (đèn trắng nhấp nháy).
+                </li>
+                <li>Trên điện thoại, vào WiFi và kết nối với
+                    <strong>Phicomm_R1_XXXX</strong>.
+                </li>
+                <li>Mở trang này, nhập WiFi nhà bạn bên dưới rồi bấm
+                    <strong>Gửi cấu hình WiFi</strong>.
+                </li>
+            </ol>
+            <div class="steps-note">
+                👉 Nên tắt <strong>4G/5G</strong> trên điện thoại để request đi qua WiFi R1, tránh lỗi ảo.
+            </div>
+        </div>
+
+        <!-- FORM CẤU HÌNH WIFI -->
+        <div class="section-title">
+            <span>Thông tin WiFi nhà bạn</span>
+            <small>API: 192.168.43.1:8989/api/configwifi</small>
+        </div>
+
+        <form id="wifiForm" autocomplete="on" novalidate>
+            <div class="field">
+                <label class="field-label" for="ssid">
+                    <span>Tên WiFi (SSID)</span>
+                    <span class="right-hint">Ví dụ: MyHome_5G</span>
+                </label>
+                <input
+                    type="text"
+                    id="ssid"
+                    name="ssid"
+                    class="input"
+                    placeholder="Nhập tên WiFi bạn muốn cho R1 kết nối"
+                    required
+                >
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="encryption">
+                    <span>Kiểu mã hóa</span>
+                    <span class="right-hint">Thường là WPA/WPA2</span>
+                </label>
+                <select id="encryption" name="encryption" class="input" required>
+                    <option value="INSECURE">Không mã hóa (INSECURE)</option>
+                    <option value="WEP">WEP</option>
+                    <option value="WPA" selected>WPA / WPA2</option>
+                </select>
+            </div>
+
+            <div class="field">
+                <label class="field-label" for="password">
+                    <span>Mật khẩu WiFi</span>
+                    <span class="right-hint">Tối thiểu 8 ký tự</span>
+                </label>
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    class="input"
+                    placeholder="Nhập mật khẩu WiFi nhà bạn"
+                    required
+                >
+            </div>
+
+            <div class="btn-row">
+                <button type="submit" id="configBtn" class="btn btn-primary">
+                    <span class="btn-icon">📡</span>
+                    <span>Gửi cấu hình WiFi</span>
+                </button>
+                <button type="button" id="resetBtn" class="btn btn-secondary">
+                    <span class="btn-icon">♻</span>
+                    <span>Xoá & nhập lại</span>
+                </button>
+            </div>
+        </form>
+
+        <div id="message" class="message message-info">
+            Điền thông tin WiFi rồi bấm “Gửi cấu hình WiFi”.
+        </div>
+
+       
+
+        <div id="scanResult" class="scan-result"></div>
+    </div>
+</div>
+
+<script>
+    // API config WiFi trên R1 khi đang ở chế độ AP
+    const R1_API_URL = "http://192.168.43.1:8989/api/configwifi";
+
+    let sendTimer = null;       // giống window.timer
+    let requestStarted = false; // đánh dấu đã gửi request
+
+    function restoreLastValues() {
+        const ssidInput = document.getElementById("ssid");
+        const encSelect = document.getElementById("encryption");
+        const pwdInput  = document.getElementById("password");
+
+        const savedSsid   = sessionStorage.getItem("ssid") || "";
+        const savedSecure = sessionStorage.getItem("secure") || "";
+        const savedPwd    = sessionStorage.getItem("password") || "";
+
+        ssidInput.value = savedSsid;
+        if (savedSecure) encSelect.value = savedSecure;
+        pwdInput.value = savedPwd;
+    }
+
+    function saveValues(ssid, secure, password) {
+        sessionStorage.setItem("ssid", ssid);
+        sessionStorage.setItem("secure", secure);
+        sessionStorage.setItem("password", password);
+    }
+
+    function showMessage(text, type) {
+        const messageEl = document.getElementById("message");
+        messageEl.textContent = text;
+        messageEl.className = "message";
+        if (type === "success")      messageEl.classList.add("message-success");
+        else if (type === "error")   messageEl.classList.add("message-error");
+        else                         messageEl.classList.add("message-info");
+    }
+
+    document.addEventListener("DOMContentLoaded", () => {
+        const form      = document.getElementById("wifiForm");
+        const configBtn = document.getElementById("configBtn");
+        const resetBtn  = document.getElementById("resetBtn");
+        const scanBtn   = document.getElementById("scanBtn");
+        const scanResult= document.getElementById("scanResult");
+
+        restoreLastValues();
+
+        resetBtn.addEventListener("click", () => {
+            document.getElementById("ssid").value = "";
+            document.getElementById("password").value = "";
+            document.getElementById("encryption").value = "WPA";
+            showMessage("Đã xoá dữ liệu, mời nhập lại.", "info");
+        });
+
+        // GỬI CẤU HÌNH WIFI TỚI R1 (LOGIC GIỐNG BẢN GỐC)
+        form.addEventListener("submit", (e) => {
+            e.preventDefault();
+
+            const ssid       = document.getElementById("ssid").value.trim();
+            const encryption = document.getElementById("encryption").value;
+            const password   = document.getElementById("password").value.trim();
+
+            if (!ssid) {
+                showMessage("Vui lòng nhập tên WiFi (SSID).", "error");
+                return;
+            }
+            if (encryption !== "INSECURE" && password.length < 8) {
+                showMessage("Mật khẩu phải dài ít nhất 8 ký tự (trừ khi WiFi không mã hóa).", "error");
+                return;
+            }
+
+            saveValues(ssid, encryption, password);
+
+            const payload = {
+                ssid: ssid,
+                secure: encryption,
+                password: password,
+                mac: ""
+            };
+
+            configBtn.disabled = true;
+            configBtn.textContent = "Đang gửi cấu hình...";
+            showMessage("Đang gửi cấu hình tới loa R1, vui lòng đợi...", "info");
+
+            requestStarted = true;
+            if (sendTimer) {
+                clearTimeout(sendTimer);
+            }
+            sendTimer = setTimeout(() => {
+                // Nếu sau 3 giây mà request vẫn chưa xong => coi như timeout
+                showMessage(
+                    "Hết thời gian chờ. Kiểm tra xem đã kết nối đúng WiFi R1 (Phicomm_R1_XXXX) " +
+                    "và đã tắt 4G/5G chưa.",
+                    "error"
+                );
+                configBtn.disabled = false;
+                configBtn.textContent = "Gửi cấu hình WiFi";
+                requestStarted = false;
+            }, 3000);
+
+            // Dùng $.ajax giống bản gốc: data = JSON.stringify, không set contentType
+            window.configwifi_ajax = $.ajax({
+                type: 'POST',
+                url: R1_API_URL,
+                dataType: 'json',
+                data: JSON.stringify(payload),
+                success: function(res) {
+                    console.log("R1 success:", res);
+                    if (!requestStarted) return;
+                    clearTimeout(sendTimer);
+                    requestStarted = false;
+
+                    showMessage(
+                        "Đã gửi cấu hình WiFi tới loa R1. Nếu loa báo 'kết nối thành công' là ok.",
+                        "success"
+                    );
+                    configBtn.disabled = false;
+                    configBtn.textContent = "Gửi cấu hình WiFi";
+                },
+                error: function(xhr, status, err) {
+                    console.warn("R1 ajax error (có thể CORS hoặc JSON):", status, err);
+
+                    if (requestStarted) {
+                        clearTimeout(sendTimer);
+                        requestStarted = false;
+                        showMessage(
+                            "Đã gửi cấu hình WiFi tới loa R1. Trình duyệt báo lỗi nhưng thường loa vẫn nhận được, " +
+                            "hãy nghe loa xem có báo 'kết nối thành công' hay không.",
+                            "success"
+                        );
+                        configBtn.disabled = false;
+                        configBtn.textContent = "Gửi cấu hình WiFi";
+                    } else {
+                        showMessage(
+                            "Không gửi được cấu hình. Hãy kiểm tra kết nối WiFi R1 và thử lại.",
+                            "error"
+                        );
+                        configBtn.disabled = false;
+                        configBtn.textContent = "Gửi cấu hình WiFi";
+                    }
+                }
+            });
+        });
+
+        // QUÉT LAN: CHỈ CHECK IP NÀO PHẢN HỒI HTTP (KHÔNG QUÉT PORT 8989)
+        async function scanLan() {
+            const prefix = document.getElementById("lanPrefix").value.trim();
+            const ipPattern = /^(\d{1,3}\.){2}\d{1,3}$/;
+
+            if (!ipPattern.test(prefix)) {
+                scanResult.innerHTML = "<span style='color:#f97316;'>Prefix không hợp lệ. Ví dụ đúng: <strong>192.168.1</strong></span>";
+                return;
+            }
+
+            scanBtn.disabled = true;
+            scanBtn.textContent = "Đang quét...";
+            scanResult.textContent = "Đang quét dải " + prefix + ".1–254 (HTTP)...";
+
+            const alive = [];
+            const maxHosts = 254;
+            const timeoutMs = 600;
+            const batchSize = 32;
+
+            const checkIp = (ip) => {
+                return new Promise((resolve) => {
+                    // Quét HTTP mặc định (port 80) bằng fetch no-cors
+                    const url = "http://" + ip + "/favicon.ico";
+                    const controller = new AbortController();
+                    const timeout = setTimeout(() => {
+                        controller.abort();
+                        resolve(null);
+                    }, timeoutMs);
+
+                    fetch(url, {mode: "no-cors", signal: controller.signal})
+                        .then(() => {
+                            clearTimeout(timeout);
+                            resolve(ip);
+                        })
+                        .catch(() => {
+                            clearTimeout(timeout);
+                            resolve(null);
+                        });
+                });
+            };
+
+            for (let start = 1; start <= maxHosts; start += batchSize) {
+                const tasks = [];
+                for (let i = start; i < start + batchSize && i <= maxHosts; i++) {
+                    const ip = `${prefix}.${i}`;
+                    tasks.push(checkIp(ip));
+                }
+                const results = await Promise.all(tasks);
+                results.forEach(ip => {
+                    if (ip) alive.push(ip);
+                });
+            }
+
+            if (alive.length === 0) {
+                scanResult.innerHTML =
+                    "<span style='color:#fb7185;'>Không tìm thấy IP nào phản hồi HTTP trong dải " +
+                    prefix + ".x. Có thể trình duyệt chặn quét LAN, hoặc dải IP không đúng.</span>";
+            } else {
+                scanResult.innerHTML =
+                    "Các IP có phản hồi HTTP trong dải " + prefix + ".x:<br>" +
+                    "<strong>" + alive.join(", ") + "</strong>" +
+                    "<br><span style='font-size:11px;color:#9ca3af;'>Trong số này sẽ có IP của loa R1 (sau khi nó vào WiFi nhà bạn). Bạn có thể thử lần lượt hoặc dùng tool khác để xác định chính xác.</span>";
+            }
+
+            scanBtn.disabled = false;
+            scanBtn.textContent = "Quét IP trong LAN";
+        }
+
+        scanBtn.addEventListener("click", () => {
+            scanLan();
+        });
+    });
+</script>
+
+</body>
+</html>
